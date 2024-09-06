@@ -2,7 +2,10 @@ name: gitleaks
 on:
   push:
   pull_request:
-
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   scan:
@@ -13,7 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: echo variable
+      - name: echo variables
+        env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
         run: |
           echo github.actor: ${{ github.actor }}
           echo github.base_ref: ${{ github.base_ref }}
@@ -27,12 +32,13 @@ jobs:
           echo github.triggering_actor: ${{ github.triggering_actor }}
           echo github.workflow: ${{ github.workflow }}
           echo github.workflow_ref: ${{ github.workflow_ref }}
-          echo github.event: ${{ toJSON(github.event) }}
+          echo github.event.pull_request: ${{ github.event.pull_request }}
+          echo github.event: $EVENT_CONTEXT
 
       - name: Check if push to target branch in pull request
-        if: ${{ github.event_name == 'push' && github.base_ref == 'main' }}
+        if: ${{ github.event_name == 'push' && github.event.pull_request.base.ref == 'main' }}
         run: echo "This is a push to the target branch in a pull request."
 
       - uses: shoptet/gitleaks-action@8bd842f1842723c6f77ea0ddf58bc2872eb073bb
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
