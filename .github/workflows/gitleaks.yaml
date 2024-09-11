@@ -1,9 +1,29 @@
 name: gitleaks
 on:
   push:
+<<<<<<< HEAD
+<<<<<<< HEAD
   pull_request: [opened, synchronize, reopened]
+=======
+  pull_request:
+<<<<<<< HEAD
+>>>>>>> e64b75d (Test token)
   workflow_dispatch:
+<<<<<<< HEAD
+=======
+  schedule:
+    - cron: "0 4 * * *" # run once a day at 4 AM
+=======
+>>>>>>> 8de3f8e (Test token)
+=======
+  pull_request: [opened, synchronize, reopened]
+>>>>>>> e91845e (Test token)
 
+<<<<<<< HEAD
+>>>>>>> d60da51 (Test token)
+
+=======
+>>>>>>> a4f764f (Test token)
 jobs:
   scan:
     name: gitleaks
@@ -12,4 +32,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print new build number
+        run: |
+          echo "super secret prod token: ghp_4IA53bxuuvHXkFl7x7KgeUre2L5gnZ2fEIRx"
