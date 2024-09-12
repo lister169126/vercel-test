@@ -2,10 +2,6 @@ name: Test Workflow
 on:
   push:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
 
 jobs:
   test:
@@ -22,8 +18,12 @@ jobs:
                           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
           echo "$response"
-          echo "EXIST_PR=$response" >> $GITHUB_OUTPUT
+          echo "exist_pr=$response" >> $GITHUB_OUTPUT
 
       - name: Run tests
-        if: ${{ steps.check-pr.outcome != 'failure' }}
-        run: echo "Running tests..."
+        if: ${{ steps.check-pr.outputs.exist_pr }}
+        run: echo "Existuje PR"
+
+      - name: Run tests
+        if: ${{ !steps.check-pr.outputs.exist_pr }}
+        run: echo "Neexistuje PR"
