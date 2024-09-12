@@ -2,22 +2,8 @@ name: Test Workflow
 on:
   push:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
 
 jobs:
-  set-target-branch:
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    outputs:
-      target_branch: ${{ steps.set-target-branch.outputs.target_branch }}
-    steps:
-      - name: Set target branch
-        id: set-target-branch
-        run: echo "target_branch=${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -25,9 +11,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if push to target branch in pull request
-        if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.target_branch && needs.set-target-branch.outputs.target_branch == github.ref_name }}
-        run: exit 1
+      - name: Check for open pull requests
+        id: check-pr
+        run: |
+          response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+                          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                          "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
+          echo "response=$(echo $response | jq length)" >> $GITHUB_ENV
+
+      - name: show response
+        run: echo ${{ steps.check-pr.outcome }}
 
       - name: Run tests
-        run: echo "Running tests..."
+        if: steps.check-pr.outcome
+        run: echo "Existuje PR"
+
+      - name: Run tests
+        if: steps.check-pr.outcome == 0
+        run: echo "Neexistuje PR"
