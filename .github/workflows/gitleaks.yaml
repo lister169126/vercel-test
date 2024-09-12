@@ -23,7 +23,7 @@ jobs:
         run: echo ${{ steps.check-pr.outputs.response }}
 
       - name: Run tests
-        if: steps.check-pr.outputs.response
+        if: steps.check-pr.outputs.response == 1
         run: echo "Existuje PR"
 
       - name: Run tests
