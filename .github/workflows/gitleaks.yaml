@@ -20,12 +20,12 @@ jobs:
           echo "response=$(echo $response | jq length)" >> $GITHUB_OUTPUT
 
       - name: show response
-        run: echo ${{ steps.check-pr.output.response }}
+        run: echo ${{ steps.check-pr.outputs.response }}
 
       - name: Run tests
-        if: steps.check-pr.output.response
+        if: steps.check-pr.outputs.response
         run: echo "Existuje PR"
 
       - name: Run tests
-        if: steps.check-pr.output.response == 0
+        if: steps.check-pr.outputs.response == 0
         run: echo "Neexistuje PR"
