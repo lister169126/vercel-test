@@ -17,15 +17,15 @@ jobs:
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
-          echo "response=$(echo $response | jq length)" >> $GITHUB_ENV
+          echo "response=$(echo $response | jq length)" >> $GITHUB_OUTPUT
 
       - name: show response
-        run: echo ${{ steps.check-pr.outcome }}
+        run: echo ${{ steps.check-pr.output.response }}
 
       - name: Run tests
-        if: steps.check-pr.outcome
+        if: steps.check-pr.output.response
         run: echo "Existuje PR"
 
       - name: Run tests
-        if: steps.check-pr.outcome == 0
+        if: steps.check-pr.output.response == 0
         run: echo "Neexistuje PR"
