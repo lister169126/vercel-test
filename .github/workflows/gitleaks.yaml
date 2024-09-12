@@ -46,7 +46,7 @@ jobs:
 
       - name: Check if push to target branch in pull request
         if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.base_ref == 'main' }}
-        run: exit 1 || echo "This is a push to the target branch in a pull request."
+        run: echo "This is a push to the target branch in a pull request." || exit 1
 
       - uses: shoptet/gitleaks-action@8bd842f1842723c6f77ea0ddf58bc2872eb073bb
         env:
