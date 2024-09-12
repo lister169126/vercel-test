@@ -1,33 +1,37 @@
-name: Test Workflow
+name: No Push on PR
+
 on:
   push:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+    branches:
+      - '**'
 
 jobs:
-  set-target-branch:
-    if: ${{ github.event_name == 'pull_request' }}
+  check-pr:
     runs-on: ubuntu-latest
-    outputs:
-      target_branch: ${{ steps.set-target-branch.outputs.target_branch }}
+
     steps:
-      - name: Set target branch
-        id: set-target-branch
-        run: echo "target_branch=${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Set up GitHub CLI
+        uses: actions/setup-gh@v2
 
-      - name: Check if push to target branch in pull request
-        if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.target_branch && needs.set-target-branch.outputs.target_branch == github.ref_name }}
-        run: exit 1
+      - name: Authenticate GitHub CLI
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Run tests
-        run: echo "Running tests..."
+      - name: Check if there is an open PR
+        id: check-pr
+        run: |
+          PR_URL=$(gh pr list --base ${{ github.ref_name }} --state open --json url --jq '.[0].url')
+          if [ -n "$PR_URL" ]; then
+            echo "Pull request exists: $PR_URL"
+            echo "pr_exists=true" >> $GITHUB_ENV
+          else
+            echo "No pull request exists for the branch."
+            echo "pr_exists=false" >> $GITHUB_ENV
+
+      - name: Fail if PR exists
+        if: env.pr_exists == 'true'
+        run: |
+          echo "Push event is blocked because there is an open pull request."
+          exit 1
