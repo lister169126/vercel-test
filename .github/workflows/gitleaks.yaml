@@ -19,6 +19,7 @@ jobs:
         run: echo "base_ref=${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
 
   scan:
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,9 +47,8 @@ jobs:
 
       - name: Check if push to target branch in pull request
         if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.base_ref == 'main' }}
-        run: echo "This is a push to the target branch in a pull request."
+        run: exit 1
 
       - uses: shoptet/gitleaks-action@8bd842f1842723c6f77ea0ddf58bc2872eb073bb
-        if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.base_ref == 'main' }}
         env:
           GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
