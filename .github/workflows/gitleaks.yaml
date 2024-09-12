@@ -12,6 +12,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check for open pull requests
+        if: github.event_name == 'push'
         id: check-pr
         run: |
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
