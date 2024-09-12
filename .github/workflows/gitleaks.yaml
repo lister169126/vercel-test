@@ -21,13 +21,8 @@ jobs:
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
-          echo "response=$response" >> $GITHUB_ENV
-          if [ "$response" == "[]" ]; then
-            echo "No open pull requests for this branch."
-          else
-            echo "Open pull requests found for this branch."
-            exit 1
-          fi
+          echo "$response"
+          echo "EXIST_PR=$response" >> $GITHUB_OUTPUT
 
       - name: Run tests
         if: ${{ steps.check-pr.outcome != 'failure' }}
