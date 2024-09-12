@@ -12,6 +12,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check for open pull requests
+        if: github.event_name == 'push'
         id: check-pr
         run: |
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
@@ -19,13 +20,6 @@ jobs:
                           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
           echo "response=$(echo $response | jq length)" >> $GITHUB_OUTPUT
 
-      - name: show response
-        run: echo ${{ steps.check-pr.output.response }}
-
       - name: Run tests
-        if: steps.check-pr.output.response
-        run: echo "Existuje PR"
-
-      - name: Run tests
-        if: steps.check-pr.output.response == 0
-        run: echo "Neexistuje PR"
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == 0)
+        run: echo "gitleaks running..."
