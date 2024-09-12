@@ -50,6 +50,5 @@ jobs:
         run: exit 1
 
       - uses: shoptet/gitleaks-action@8bd842f1842723c6f77ea0ddf58bc2872eb073bb
-        if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.base_ref == 'main' }}
         env:
           GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
