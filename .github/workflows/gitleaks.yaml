@@ -2,8 +2,7 @@ name: No Push on PR
 
 on:
   push:
-    branches:
-      - '**'
+  pull_request:
 
 jobs:
   check-pr:
