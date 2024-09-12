@@ -1,36 +1,34 @@
-name: No Push on PR
-
+name: Test Workflow
 on:
   push:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
-  check-pr:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up GitHub CLI
-        uses: ksivamuthu/actions-setup-gh-cli@v3
-
-      - name: Authenticate GitHub CLI
-        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Check if there is an open PR
+      - name: Check for open pull requests
         id: check-pr
         run: |
-          PR_URL=$(gh pr list --base ${{ github.ref_name }} --state open --json url --jq '.[0].url')
-          if [ -n "$PR_URL" ]; then
-            echo "Pull request exists: $PR_URL"
-            echo "pr_exists=true" >> $GITHUB_ENV
+          response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+                          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                          "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
+          echo "response=$response" >> $GITHUB_ENV
+          if [ "$response" == "[]" ]; then
+            echo "No open pull requests for this branch."
           else
-            echo "No pull request exists for the branch."
-            echo "pr_exists=false" >> $GITHUB_ENV
+            echo "Open pull requests found for this branch."
+            exit 1
+          fi
 
-      - name: Fail if PR exists
-        if: env.pr_exists == 'true'
-        run: |
-          echo "Push event is blocked because there is an open pull request."
-          exit 1
+      - name: Run tests
+        if: ${{ steps.check-pr.outcome != 'failure' }}
+        run: echo "Running tests..."
