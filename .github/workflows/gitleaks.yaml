@@ -8,8 +8,18 @@ on:
       - reopened
 
 jobs:
+  set-target-branch:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    outputs:
+      target_branch: ${{ steps.set-target-branch.outputs.target_branch }}
+    steps:
+      - name: Set target branch
+        id: set-target-branch
+        run: echo "::set-output name=target_branch::${{ github.event.pull_request.base.ref }}"
+
   scan:
-    name: gitleaks
+    needs: set-target-branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +46,7 @@ jobs:
           echo github.event: $EVENT_CONTEXT
 
       - name: Check if push to target branch in pull request
-        if: ${{ github.event_name == 'push' && github.event.pull_request.base.ref == 'main' }}
+        if: ${{ github.event_name == 'push' && needs.set-target-branch.outputs.target_branch == 'main' }}
         run: echo "This is a push to the target branch in a pull request."
 
       - uses: shoptet/gitleaks-action@8bd842f1842723c6f77ea0ddf58bc2872eb073bb
