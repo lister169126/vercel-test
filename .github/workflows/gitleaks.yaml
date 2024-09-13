@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Check for open pull requests
         if: github.event_name == 'push'
-        id: check-pr
+        id: get-pr
         run: |
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -23,10 +23,10 @@ jobs:
           echo "response=${PR_COUNT}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == '0')
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.get-pr.outputs.exists == 'false')
         with:
           fetch-depth: 0
 
       - name: Run tests
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == '0')
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.get-pr.outputs.exists == 'false')
         run: echo "gitleaks running..."
