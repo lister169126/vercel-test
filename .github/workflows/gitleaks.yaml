@@ -7,10 +7,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Check for open pull requests
         if: github.event_name == 'push'
         id: check-pr
@@ -18,8 +14,19 @@ jobs:
           response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${{ github.repository_owner }}:${{ github.ref_name }}")
-          echo "response=$(echo $response | jq length)" >> $GITHUB_OUTPUT
+          PR_COUNT=$(echo "$response" | jq length)
+          if (( PR_COUNT > 0 )); then
+          echo "PR #$(echo "$response" | jq '.[] | .number' | head -n1 ) found. Security check will run with synchronize event on that PR. Stopping."
+          else
+          echo "No PR found for this push. Continue to security check..."
+          fi
+          echo "response=${PR_COUNT}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == '0')
+        with:
+          fetch-depth: 0
 
       - name: Run tests
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == 0)
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && steps.check-pr.outputs.response == '0')
         run: echo "gitleaks running..."
